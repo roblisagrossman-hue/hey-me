@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+server/speech_cache/
+server/timers.json
+server/apps/*.apk
+satellite/venv/
+android/.gradle/
+android/build/
+android/app/build/
+android/app/src/main/assets/model-en-us/
+android/local.properties

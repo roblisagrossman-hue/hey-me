@@ -1,0 +1,12 @@
+anthropic
+flask
+waitress
+faster-whisper
+numpy
+requests
+pyautogui
+cryptography
+certifi
+# for the microphone on this PC (the listener):
+vosk
+sounddevice

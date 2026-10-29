@@ -1,0 +1,202 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "hey me",
+      "intents": [
+        {
+          "name": "AskHeyMeIntent",
+          "slots": [
+            {
+              "name": "query",
+              "type": "ANYTHING"
+            }
+          ],
+          "samples": [
+            "{query}",
+            "to {query}",
+            "please {query}",
+            "can you {query}",
+            "could you {query}"
+          ]
+        },
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NavigateHomeIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        }
+      ],
+      "types": [
+        {
+          "name": "ANYTHING",
+          "values": [
+            {
+              "name": {
+                "value": "turn on the living room tv"
+              }
+            },
+            {
+              "name": {
+                "value": "what's the weather"
+              }
+            },
+            {
+              "name": {
+                "value": "play some music in the kitchen"
+              }
+            },
+            {
+              "name": {
+                "value": "set a timer for ten minutes"
+              }
+            },
+            {
+              "name": {
+                "value": "remind me to call mom at five"
+              }
+            },
+            {
+              "name": {
+                "value": "announce dinner is ready"
+              }
+            },
+            {
+              "name": {
+                "value": "pause the bedroom tv"
+              }
+            },
+            {
+              "name": {
+                "value": "what time is it"
+              }
+            },
+            {
+              "name": {
+                "value": "open youtube on the tv"
+              }
+            },
+            {
+              "name": {
+                "value": "who won the game last night"
+              }
+            },
+            {
+              "name": {
+                "value": "play the beatles"
+              }
+            },
+            {
+              "name": {
+                "value": "turn the volume up on the pc"
+              }
+            },
+            {
+              "name": {
+                "value": "how many ounces in a cup"
+              }
+            },
+            {
+              "name": {
+                "value": "tell me a joke"
+              }
+            },
+            {
+              "name": {
+                "value": "stop the music"
+              }
+            },
+            {
+              "name": {
+                "value": "play the matrix on the bedroom tv"
+              }
+            },
+            {
+              "name": {
+                "value": "what's on my timers"
+              }
+            },
+            {
+              "name": {
+                "value": "cancel all timers"
+              }
+            },
+            {
+              "name": {
+                "value": "search youtube for fishing videos"
+              }
+            },
+            {
+              "name": {
+                "value": "go home on the living room tv"
+              }
+            },
+            {
+              "name": {
+                "value": "what's the capital of france"
+              }
+            },
+            {
+              "name": {
+                "value": "play jazz everywhere"
+              }
+            },
+            {
+              "name": {
+                "value": "good night"
+              }
+            },
+            {
+              "name": {
+                "value": "is it going to snow tomorrow"
+              }
+            },
+            {
+              "name": {
+                "value": "how far is the moon"
+              }
+            },
+            {
+              "name": {
+                "value": "open netflix"
+              }
+            },
+            {
+              "name": {
+                "value": "skip this song"
+              }
+            },
+            {
+              "name": {
+                "value": "mute the tv"
+              }
+            },
+            {
+              "name": {
+                "value": "what's the score of the vikings game"
+              }
+            },
+            {
+              "name": {
+                "value": "help me"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
