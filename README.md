@@ -14,6 +14,26 @@ and answers out loud.
          controls: the PC · both Shields · Echos & Alexa routines · media
 ```
 
+## Combined with MEdiaCenter
+
+Hey Me lives in `C:\MEdiaCenter\HeyMe` and works together with MEdiaCenter:
+
+- **"Hey ME" in MEdiaCenter** (web pages, MEdiaDroid, the widget) still does everything it did
+  before: play, open pages, weather, what's on. Anything ME doesn't know now goes to Hey Me's
+  brain (Claude), so ME can also set timers, control the Shields, make announcements on the Echos and Pi speakers,
+  and answer any question.
+- **Hey Me** (phones, Pi speakers, Echos) uses **MEdiaCenter's library** and can play titles on
+  any **screen showing MEdiaCenter**: "Hey Me, play Jaws on the living room Shield". It can also ask ME
+  what's on live TV, what's recording and what's new.
+- The connection is `C:\MEdiaCenter\app\heyme_bridge.py`, with settings in
+  `C:\MEdiaCenter\data\heyme.json`. Its secret must match `SECRET` in `HeyMe\server\settings.py`.
+- **After a MEdiaCenter update**, check that `server.py` still has these two lines right after
+  `alexa.install(app, globals())`. If they're missing, add them back:
+  ```python
+  import heyme_bridge                                     # noqa: E402
+  heyme_bridge.install(app, globals())
+  ```
+
 ## What's in this folder
 
 | Folder | What it is |
@@ -31,8 +51,8 @@ Do the steps in order. Each one works on its own, so you can stop after any of t
 
 1. **Install Python 3.12** from python.org. On the first screen, tick
    **"Add Python to PATH"**.
-2. Copy this whole `HeyMe` folder to the PC, for example `C:\HeyMe`.
-3. Open `C:\HeyMe\server\settings.py` in Notepad and fill in at least:
+2. Hey Me is already in `C:\MEdiaCenter\HeyMe`.
+3. Open `C:\MEdiaCenter\HeyMe\server\settings.py` in Notepad and fill in at least:
    - `ANTHROPIC_API_KEY`: your key from console.anthropic.com
    - `SECRET`: make up a password. Every Hey Me device will use it.
    - `PC_MIC_NAME`: the room this PC is in, e.g. `"office"`
