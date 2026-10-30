@@ -28,6 +28,7 @@ import requests
 
 import settings
 import speech
+import mediacenter
 
 HERE = Path(__file__).parent
 
@@ -287,6 +288,12 @@ class MediaLibrary:
             return []
         return sorted((f for s, f in scored if s == best), key=lambda f: f[3])
 
+    def add_path(self, path):
+        fid = hashlib.sha1(path.encode("utf-8", "replace")).hexdigest()[:16]
+        with self.lock:
+            self.by_id[fid] = path
+        return fid
+
     def file_link(self, fid):
         name = os.path.basename(self.by_id.get(fid, "file"))
         return f"/media/{fid}/{quote(name)}?t={quote(settings.SECRET)}"
@@ -339,6 +346,10 @@ def skill_weather(days=1):
 def skill_set_timer(args, ctx):
     seconds = int(args["seconds"])
     target = args.get("ring_on") or ctx["device"]
+    if ctx["kind"] == "mediacenter" and not args.get("ring_on"):
+        options = [d["name"] for d in hub.online()] + list(settings.ECHOS)
+        return ("Ask the user which room should ring (MEdiaCenter screens can't ring timers). "
+                f"Options: {', '.join(options) or 'no Hey Me speakers are online yet'}, or everywhere.")
     if ctx["kind"] == "alexa" and not _match(target, settings.ECHOS) and not args.get("ring_on"):
         return ("This Echo isn't linked to Hey Me yet, so Hey Me can't ring on it. Tell the user "
                 "to say 'Alexa, set a timer' directly, or pick another device to ring on.")
@@ -457,16 +468,25 @@ def shield_play(ip, url, mime):
                "-d", url, "-t", mime)
 
 
+def _find_media(query, kind):
+    """-> [(file id, path, title, MEdiaCenter media id or None)]"""
+    if mediacenter.enabled():
+        items = mediacenter.search(query, {"audio": "music", "video": "video"}.get(kind, "any"))
+        if items:
+            return [(media.add_path(i["path"]), i["path"], i["label"], i["id"]) for i in items]
+    return [(f[0], f[1], _title(f[1]), None) for f in media.search(query, kind)]
+
+
 def skill_play_media(args, ctx):
     query = args.get("query", "")
     kind = {"music": "audio", "audio": "audio", "video": "video"}.get(args.get("kind", "any"))
-    found = media.search(query, kind)
+    found = _find_media(query, kind)
     if not found:
-        return f"Nothing in the media library matches '{query}'."
-    if args.get("shuffle") or len(found) > 1 and kind == "audio" and len(found) > 3:
+        return f"Nothing in the library matches '{query}'."
+    if args.get("shuffle") or kind == "audio" and len(found) > 3:
         random.shuffle(found)
     found = found[:300]
-    titles = ", ".join(_title(f[1]) for f in found[:3])
+    titles = ", ".join(f[2] for f in found[:3])
     more = f" and {len(found) - 3} more" if len(found) > 3 else ""
 
     if len(found) == 1:
@@ -479,6 +499,17 @@ def skill_play_media(args, ctx):
     where = args.get("where") or "here"
     if _norm(where) in ("here", "this room", "this device", ""):
         where = ctx["device"]
+    if ctx["kind"] == "mediacenter" and _norm(where) == _norm(ctx["device"]):
+        return ("Ask the user which screen or room to play it on. MEdiaCenter screens: "
+                f"{', '.join(mediacenter.screens()) or 'none online'}; Shields: {', '.join(settings.SHIELDS)}.")
+
+    # 0) a screen that is showing MEdiaCenter: MEdiaCenter plays it itself
+    screen = _match(where, mediacenter.screens()) if mediacenter.enabled() else None
+    if screen and found[0][3]:
+        r = mediacenter.screen_cmd(screen, "play", media_id=found[0][3])
+        if r.get("ok"):
+            return f"Playing {r.get('title') or found[0][2]} on {r.get('screen') or screen}."
+        return f"Couldn't play on {screen}: {r.get('error', 'no answer')}"
 
     # 1) this server PC
     if _norm(where) in ("pc", "computer", "server", "this pc", "the pc") or \
@@ -521,6 +552,10 @@ def skill_stop_media(args, ctx):
     where = args.get("where") or ctx["device"]
     if _norm(where) in ("pc", "computer", "server"):
         return skill_pc_media("stop")
+    screen = _match(where, mediacenter.screens()) if mediacenter.enabled() else None
+    if screen:
+        r = mediacenter.screen_cmd(screen, args.get("action") or "stop")
+        return f"Done on {r.get('screen') or screen}." if r.get("ok") else f"Couldn't: {r.get('error')}"
     name, ip = find_shield(where)
     if ip:
         return skill_shield({"shield": name, "action": "stop"})
@@ -573,7 +608,8 @@ def build_tools():
     devices = [d["name"] for d in hub.online()]
     shields = list(settings.SHIELDS)
     echos = list(settings.ECHOS)
-    places = ["here", "pc"] + shields + devices
+    mc_screens = mediacenter.screens() if mediacenter.enabled() else []
+    places = ["here", "pc"] + mc_screens + shields + devices
     return [
         {"name": "set_timer",
          "description": "Start a countdown timer. It rings and speaks when done.",
@@ -632,14 +668,23 @@ def build_tools():
              "where": {"type": "string", "description": f"Options: {', '.join(places)}"},
              "shuffle": {"type": "boolean"}},
              "required": ["query"]}},
-        {"name": "stop_media", "description": "Stop media that Hey Me started.",
+        {"name": "stop_media", "description": "Stop, pause or resume media on a device or MEdiaCenter screen.",
          "input_schema": {"type": "object", "properties": {
-             "where": {"type": "string", "description": f"Options: {', '.join(places)}"}}}},
+             "where": {"type": "string", "description": f"Options: {', '.join(places)}"},
+             "action": {"type": "string", "enum": ["stop", "pause", "resume"]}}}},
         {"name": "search_media", "description": "Look up what's in the media library without playing.",
          "input_schema": {"type": "object", "properties": {
              "query": {"type": "string"},
              "kind": {"type": "string", "enum": ["music", "video", "any"]}},
              "required": ["query"]}},
+        {"name": "mediacenter",
+         "description": "The user's MEdiaCenter server. 'ask' passes a question to its assistant ME, which knows "
+                        "what's on live TV now, DVR recordings, what's newly added, how many movies/shows/songs, "
+                        "who is online, and the morning briefing. 'announce' posts a family announcement in MEdiaCenter.",
+         "input_schema": {"type": "object", "properties": {
+             "action": {"type": "string", "enum": ["ask", "announce"]},
+             "text": {"type": "string", "description": "The question for ME, or the announcement"}},
+             "required": ["action", "text"]}},
         {"name": "alexa_routine",
          "description": f"Start an Alexa routine (smart lights, plugs, etc). Routines: {', '.join(settings.ECHO_ROUTINES) or 'none set up yet'}",
          "input_schema": {"type": "object", "properties": {"routine": {"type": "string"}},
@@ -673,6 +718,12 @@ def run_tool(name, args, ctx):
         return skill_stop_media(a, ctx)
     if name == "search_media":
         return skill_search_media(a.get("query", ""), a.get("kind", "any"))
+    if name == "mediacenter":
+        if not mediacenter.enabled():
+            return "MEdiaCenter isn't connected (MEDIACENTER_URL is empty in settings.py)."
+        if a.get("action") == "announce":
+            return mediacenter.announce(a.get("text", ""))
+        return mediacenter.ask(a.get("text", ""))
     if name == "alexa_routine":
         return echo_routine(a.get("routine", ""))
     return f"Unknown skill {name}"

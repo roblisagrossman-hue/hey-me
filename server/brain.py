@@ -12,6 +12,7 @@ import anthropic
 
 import settings
 import skills
+import mediacenter
 
 client = anthropic.Anthropic(api_key=settings.ANTHROPIC_API_KEY or None)
 
@@ -32,7 +33,9 @@ It is now {now}. Home: {settings.CITY}.
 You're talking through the device "{ctx['device']}" (type: {ctx['kind']}).
 "Here" or "this room" means that device.
 Hey Me devices online: {', '.join(online) or 'none'}.
-TVs (NVIDIA Shields): {', '.join(settings.SHIELDS) or 'none'}.
+TVs (NVIDIA Shields, controlled with the shield tool): {', '.join(settings.SHIELDS) or 'none'}.
+Screens showing MEdiaCenter right now (play titles there with play_media): {', '.join(mediacenter.screens()) or 'none'}.
+The media library is MEdiaCenter's. For live TV, recordings or what's new, use the mediacenter tool.
 Echo speakers: {', '.join(settings.ECHOS) or 'none set up'}.
 The server PC: "pc".
 

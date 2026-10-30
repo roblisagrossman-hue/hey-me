@@ -104,7 +104,7 @@ def api_ask_text():
     data = request.get_json(force=True, silent=True) or {}
     name = (data.get("device") or "status page")[:40]
     kind = (data.get("kind") or "web")[:20]
-    skills.hub.seen(name, kind) if kind != "web" else None
+    skills.hub.seen(name, kind) if kind not in ("web", "mediacenter") else None
     text = (data.get("text") or "").strip()
     if not text:
         return jsonify({"error": "no text"}), 400

@@ -45,7 +45,7 @@ VOICE_SPEED = 1          # -10 (slow) to 10 (fast)
 # ---- Microphone on this server PC -------------------------------------
 
 # True = the server PC itself listens for "Hey Me" with its own microphone.
-PC_MIC_ENABLED = True
+PC_MIC_ENABLED = False   # MEdiaCenter's own "Hey ME" already listens on this PC
 PC_MIC_NAME = "office"   # what you call the room this PC is in
 
 # ---- PC control --------------------------------------------------------
@@ -83,14 +83,18 @@ SHIELD_APPS = {
 # otherwise e.g. r"C:\platform-tools\adb.exe"
 ADB_PATH = "adb"
 
+# ---- MEdiaCenter -----------------------------------------------------------
+
+# Your MEdiaCenter server. Hey Me uses its library and screens, and MEdiaCenter's
+# "ME" uses Hey Me as its brain. Leave blank to keep them separate.
+MEDIACENTER_URL = "http://127.0.0.1:8000"
+
 # ---- Your media ---------------------------------------------------------
 
-# Folders Hey Me searches when you say "play ...".
-# Use r"..." around Windows paths. Add as many folders as you like.
+# Extra folders Hey Me searches when you say "play ...". Not needed when
+# MEdiaCenter is connected (Hey Me uses MEdiaCenter's library instead).
+# Use r"..." around Windows paths.
 MEDIA_FOLDERS = [
-    r"D:\Music",
-    r"D:\Movies",
-    r"D:\TV Shows",
 ]
 
 # How other devices reach this server. Leave blank and Hey Me works it out.
